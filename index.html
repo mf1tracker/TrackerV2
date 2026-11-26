@@ -1,0 +1,1723 @@
+<!DOCTYPE html>
+<html lang="de" class="dark">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no, viewport-fit=cover" />
+  <meta name="theme-color" content="#060913" />
+  <meta name="apple-mobile-web-app-capable" content="yes" />
+  <meta name="apple-mobile-web-app-status-bar-style" content="black-translucent" />
+  <meta name="apple-mobile-web-app-title" content="NutriGlass" />
+  <title>NutriGlass • Makro, Mikro & Stack</title>
+  <link rel="manifest" href="./manifest.json" />
+  <link rel="icon" type="image/svg+xml" href="./icon.svg" />
+  <link rel="apple-touch-icon" sizes="192x192" href="./icon-192.png" />
+  <link rel="apple-touch-icon" sizes="512x512" href="./icon-512.png" />
+  <script src="https://cdn.tailwindcss.com"></script>
+  <script src="https://unpkg.com/html5-qrcode@2.3.8/html5-qrcode.min.js"></script>
+  <link rel="preconnect" href="https://fonts.googleapis.com">
+  <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+  <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700;800&display=swap" rel="stylesheet">
+  <script>
+    tailwind.config = {
+      darkMode: 'class',
+      theme: {
+        extend: {
+          fontFamily: { sans: ['Inter', 'system-ui', 'sans-serif'] },
+          colors: {
+            void: '#060913',
+          }
+        }
+      }
+    }
+  </script>
+  <style>
+    :root {
+      --safe-top: env(safe-area-inset-top, 0px);
+      --safe-bottom: env(safe-area-inset-bottom, 0px);
+    }
+    * {
+      -webkit-tap-highlight-color: transparent;
+      box-sizing: border-box;
+    }
+    body {
+      background-color: #060913;
+      color: #f8fafc;
+      font-family: 'Inter', system-ui, sans-serif;
+      margin: 0;
+      padding: 0;
+      min-height: 100dvh;
+      overflow-x: hidden;
+    }
+    /* Ambient Layered Glass Background */
+    .ambient-canvas {
+      position: fixed;
+      inset: 0;
+      z-index: 0;
+      overflow: hidden;
+      pointer-events: none;
+      background: radial-gradient(circle at 50% 0%, #0d1428 0%, #060913 70%);
+    }
+    .orb {
+      position: absolute;
+      border-radius: 9999px;
+      filter: blur(85px);
+      opacity: 0.34;
+      animation: floatOrb 18s ease-in-out infinite alternate;
+    }
+    .orb-1 {
+      width: 280px;
+      height: 280px;
+      top: -60px;
+      left: -60px;
+      background: #4f46e5;
+    }
+    .orb-2 {
+      width: 260px;
+      height: 260px;
+      top: 28%;
+      right: -80px;
+      background: #0891b2;
+      animation-delay: -6s;
+    }
+    .orb-3 {
+      width: 240px;
+      height: 240px;
+      bottom: 8%;
+      left: 10%;
+      background: #059669;
+      opacity: 0.22;
+      animation-delay: -12s;
+    }
+    @keyframes floatOrb {
+      0% { transform: translate(0, 0) scale(1); }
+      100% { transform: translate(24px, 32px) scale(1.08); }
+    }
+
+    /* Glassmorphism Surfaces */
+    .glass-card {
+      background: linear-gradient(155deg, rgba(24, 33, 54, 0.64) 0%, rgba(12, 17, 30, 0.72) 100%);
+      backdrop-filter: blur(22px) saturate(165%);
+      -webkit-backdrop-filter: blur(22px) saturate(165%);
+      border: 1px solid rgba(255, 255, 255, 0.11);
+      box-shadow:
+        0 10px 30px -10px rgba(0, 0, 0, 0.65),
+        inset 0 1px 0 0 rgba(255, 255, 255, 0.14);
+    }
+    .glass-subtle {
+      background: rgba(255, 255, 255, 0.045);
+      backdrop-filter: blur(14px);
+      -webkit-backdrop-filter: blur(14px);
+      border: 1px solid rgba(255, 255, 255, 0.08);
+    }
+    .glass-pill {
+      background: rgba(255, 255, 255, 0.06);
+      border: 1px solid rgba(255, 255, 255, 0.1);
+      transition: all 0.2s cubic-bezier(0.22, 1, 0.36, 1);
+    }
+    .glass-pill:active {
+      transform: scale(0.96);
+    }
+    .glass-dock {
+      background: rgba(11, 16, 29, 0.82);
+      backdrop-filter: blur(26px) saturate(180%);
+      -webkit-backdrop-filter: blur(26px) saturate(180%);
+      border: 1px solid rgba(255, 255, 255, 0.13);
+      box-shadow: 0 20px 40px rgba(0, 0, 0, 0.75), inset 0 1px 0 rgba(255, 255, 255, 0.16);
+    }
+    .glass-modal {
+      background: linear-gradient(180deg, rgba(19, 26, 44, 0.94) 0%, rgba(9, 13, 24, 0.97) 100%);
+      backdrop-filter: blur(30px) saturate(180%);
+      -webkit-backdrop-filter: blur(30px) saturate(180%);
+      border-top: 1px solid rgba(255, 255, 255, 0.16);
+    }
+
+    /* Hide Scrollbars cleanly */
+    .no-scrollbar::-webkit-scrollbar { display: none; }
+    .no-scrollbar { -ms-overflow-style: none; scrollbar-width: none; }
+
+    /* Custom Number Inputs */
+    input[type="number"]::-webkit-inner-spin-button,
+    input[type="number"]::-webkit-outer-spin-button {
+      -webkit-appearance: none;
+      margin: 0;
+    }
+    input[type="number"] { -moz-appearance: textfield; }
+
+    /* Smooth Tab Transitions */
+    .tab-view {
+      animation: fadeSlideUp 0.24s cubic-bezier(0.22, 1, 0.36, 1);
+    }
+    @keyframes fadeSlideUp {
+      from { opacity: 0; transform: translateY(8px); }
+      to { opacity: 1; transform: translateY(0); }
+    }
+
+    /* Scanner Override */
+    #qr-reader {
+      border: none !important;
+      border-radius: 16px;
+      overflow: hidden;
+    }
+    #qr-reader video {
+      border-radius: 16px;
+      object-fit: cover;
+    }
+  </style>
+</head>
+<body>
+  <div class="ambient-canvas">
+    <div class="orb orb-1"></div>
+    <div class="orb orb-2"></div>
+    <div class="orb orb-3"></div>
+  </div>
+
+  <!-- Main App Shell -->
+  <div class="relative z-10 max-w-[480px] mx-auto min-h-[100dvh] flex flex-col pb-28">
+    
+    <!-- Top Sticky Glass Header -->
+    <header class="sticky top-0 z-30 px-4 pt-[calc(12px+var(--safe-top))] pb-3 backdrop-blur-xl bg-[#060913]/70 border-b border-white/[0.07]">
+      <div class="flex items-center justify-between gap-2">
+        <div class="flex items-center gap-2.5">
+          <div class="w-9 h-9 rounded-2xl bg-gradient-to-br from-indigo-500/30 to-cyan-500/30 border border-white/15 flex items-center justify-center shadow-inner">
+            <span class="text-sm font-extrabold bg-gradient-to-r from-cyan-300 to-indigo-300 bg-clip-text text-transparent">NG</span>
+          </div>
+          <div>
+            <div class="flex items-center gap-1.5">
+              <h1 class="text-sm font-bold tracking-tight text-white">NutriGlass</h1>
+              <span id="phaseBadge" onclick="togglePhase()" class="cursor-pointer text-[10px] font-semibold uppercase tracking-wider px-2 py-0.5 rounded-full bg-indigo-500/25 text-indigo-300 border border-indigo-400/30">
+                Bulk • 3300
+              </span>
+            </div>
+            <div class="flex items-center gap-2 mt-0.5">
+              <button onclick="shiftDate(-1)" class="text-slate-400 hover:text-white text-xs px-1">◀</button>
+              <span id="currentDateLabel" class="text-[11px] font-medium text-slate-300">Heute</span>
+              <button onclick="shiftDate(1)" class="text-slate-400 hover:text-white text-xs px-1">▶</button>
+            </div>
+          </div>
+        </div>
+
+        <button onclick="openQuickLogModal()" class="glass-pill px-3 py-2 rounded-2xl flex items-center gap-1.5 text-xs font-semibold text-cyan-300 border-cyan-400/25 bg-cyan-500/10 hover:bg-cyan-500/20">
+          <span class="text-base leading-none">+</span> Loggen
+        </button>
+      </div>
+    </header>
+
+    <!-- Main Dynamic Viewport -->
+    <main id="appViewport" class="flex-1 px-4 pt-4 space-y-4">
+      <!-- Views injected via JS -->
+    </main>
+
+    <!-- Toast Notification -->
+    <div id="toast" class="fixed top-20 left-1/2 -translate-x-1/2 z-50 pointer-events-none opacity-0 transition-all duration-300 transform -translate-y-2">
+      <div class="glass-card px-4 py-2.5 rounded-2xl text-xs font-semibold text-white flex items-center gap-2 border-cyan-400/30 shadow-2xl">
+        <span id="toastIcon">✨</span>
+        <span id="toastText">Gespeichert</span>
+      </div>
+    </div>
+
+    <!-- Floating Bottom Glass Dock -->
+    <nav class="fixed bottom-0 left-0 right-0 z-40 px-4 pb-[calc(12px+var(--safe-bottom))] pt-2 pointer-events-none">
+      <div class="max-w-[448px] mx-auto glass-dock rounded-[26px] p-1.5 grid grid-cols-4 gap-1 pointer-events-auto">
+        <button onclick="switchTab('today')" data-tab="today" class="nav-btn flex flex-col items-center justify-center py-2 rounded-2xl text-[11px] font-semibold transition-all">
+          <svg class="w-5 h-5 mb-0.5" fill="none" stroke="currentColor" stroke-width="2" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" d="M3 12l2-2m0 0l7-7 7 7M5 10v10a1 1 0 001 1h3m10-11l2 2m-2-2v10a1 1 0 01-1 1h-3m-6 0a1 1 0 001-1v-4a1 1 0 011-1h2a1 1 0 011 1v4a1 1 0 001 1m-6 0h6"/></svg>
+          Heute
+        </button>
+        <button onclick="switchTab('scan')" data-tab="scan" class="nav-btn flex flex-col items-center justify-center py-2 rounded-2xl text-[11px] font-semibold transition-all">
+          <svg class="w-5 h-5 mb-0.5" fill="none" stroke="currentColor" stroke-width="2" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" d="M12 4v1m6 11h2m-6 0h-2v4m0-11v3m0 0h.01M12 12h4.01M16 20h4M4 12h4m12 0h.01M5 8h2a1 1 0 001-1V5a1 1 0 00-1-1H5a1 1 0 00-1 1v2a1 1 0 001 1zm12 0h2a1 1 0 001-1V5a1 1 0 00-1-1h-2a1 1 0 00-1 1v2a1 1 0 001 1zM5 20h2a1 1 0 001-1v-2a1 1 0 00-1-1H5a1 1 0 00-1 1v2a1 1 0 001 1z"/></svg>
+          Scan & Food
+        </button>
+        <button onclick="switchTab('supps')" data-tab="supps" class="nav-btn flex flex-col items-center justify-center py-2 rounded-2xl text-[11px] font-semibold transition-all">
+          <svg class="w-5 h-5 mb-0.5" fill="none" stroke="currentColor" stroke-width="2" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" d="M19.428 15.428a2 2 0 00-1.022-.547l-2.387-.477a6 6 0 00-3.86.517l-.318.158a6 6 0 01-3.86.517L6.05 15.21a2 2 0 00-1.806.547M8 4h8l-1 1v5.172a2 2 0 00.586 1.414l5 5c1.26 1.26.367 3.414-1.415 3.414H4.828c-1.782 0-2.674-2.154-1.414-3.414l5-5A2 2 0 009 10.172V5L8 4z"/></svg>
+          Stack & Mikro
+        </button>
+        <button onclick="switchTab('presets')" data-tab="presets" class="nav-btn flex flex-col items-center justify-center py-2 rounded-2xl text-[11px] font-semibold transition-all">
+          <svg class="w-5 h-5 mb-0.5" fill="none" stroke="currentColor" stroke-width="2" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" d="M13 10V3L4 14h7v7l9-11h-7z"/></svg>
+          1-Klick & Mehr
+        </button>
+      </div>
+    </nav>
+  </div>
+
+  <!-- Modal Container -->
+  <div id="modalBackdrop" class="fixed inset-0 z-50 bg-black/75 backdrop-blur-sm hidden flex items-end sm:items-center justify-center p-0 sm:p-4" onclick="closeModalOnBackdrop(event)">
+    <div id="modalSheet" class="glass-modal w-full max-w-[480px] rounded-t-[30px] sm:rounded-[30px] max-h-[88dvh] overflow-y-auto p-5 pb-[calc(24px+var(--safe-bottom))] shadow-2xl">
+      <!-- Dynamic modal content -->
+    </div>
+  </div>
+
+  <script>
+    // =========================================================================
+    // 1. DEFAULT PERSONAL FOOD DATABASE (PER 100g / 100ml / 1 UNIT)
+    // =========================================================================
+    const DEFAULT_FOODS = [
+      // Brot, Getreide & Ballaststoffe
+      { id: 'dinkelbrot', name: 'Dinkelvollkornbrot', cat: 'Brot & Getreide', unit: 'g', defaultQty: 120, kcal: 230, p: 9.0, kh: 38.0, f: 3.5, fib: 6.5, micro: { mg: 65, fe: 2.2, zn: 1.5, ca: 25, b12: 0 } },
+      { id: 'spar_eiweissbrot', name: 'SPAR Vital Eiweißbrot', cat: 'Brot & Getreide', unit: 'g', defaultQty: 100, kcal: 248, p: 22.0, kh: 14.0, f: 9.5, fib: 9.8, micro: { mg: 80, fe: 3.1, zn: 2.4, ca: 60, b12: 0 } },
+      { id: 'holies', name: 'Holies (Crunch / Flakes)', cat: 'Brot & Getreide', unit: 'g', defaultQty: 50, kcal: 462, p: 27.0, kh: 28.0, f: 25.0, fib: 11.0, micro: { mg: 110, fe: 3.5, zn: 2.8, ca: 75, b12: 0 } },
+      { id: 'haferflocken', name: 'Haferflocken (zart)', cat: 'Brot & Getreide', unit: 'g', defaultQty: 60, kcal: 372, p: 13.5, kh: 58.7, f: 7.0, fib: 10.0, micro: { mg: 130, fe: 4.6, zn: 3.6, ca: 54, b12: 0 } },
+      { id: 'sojaflocken', name: 'Sojaflocken', cat: 'Brot & Getreide', unit: 'g', defaultQty: 25, kcal: 416, p: 41.0, kh: 13.0, f: 20.0, fib: 11.5, micro: { mg: 220, fe: 8.5, zn: 4.2, ca: 195, b12: 0 } },
+      { id: 'leinsamen', name: 'Leinsamen (geschrotet)', cat: 'Brot & Getreide', unit: 'g', defaultQty: 15, kcal: 495, p: 22.0, kh: 4.0, f: 36.0, fib: 27.0, micro: { mg: 350, fe: 5.7, zn: 4.3, ca: 230, b12: 0 } },
+      { id: 'basmatireis', name: 'Basmatireis (roh)', cat: 'Brot & Getreide', unit: 'g', defaultQty: 100, kcal: 350, p: 7.5, kh: 78.0, f: 0.8, fib: 1.4, micro: { mg: 25, fe: 0.8, zn: 1.1, ca: 10, b12: 0 } },
+
+      // Milchprodukte & Käse (Standard Milch = 3,5 % Fett!)
+      { id: 'milch_35', name: 'Milch 3,5 % Fett', cat: 'Milch & Käse', unit: 'ml', defaultQty: 200, kcal: 64, p: 3.3, kh: 4.8, f: 3.5, fib: 0.0, micro: { mg: 12, fe: 0.05, zn: 0.4, ca: 120, b12: 0.4 } },
+      { id: 'proteinkaese', name: 'Proteinkäse', cat: 'Milch & Käse', unit: 'g', defaultQty: 80, kcal: 219, p: 32.0, kh: 0.3, f: 9.5, fib: 0.0, micro: { mg: 35, fe: 0.3, zn: 3.8, ca: 850, b12: 1.6 } },
+      { id: 'grillkaese', name: 'Grillkäse', cat: 'Milch & Käse', unit: 'g', defaultQty: 100, kcal: 240, p: 21.0, kh: 1.5, f: 16.5, fib: 0.0, micro: { mg: 28, fe: 0.2, zn: 2.8, ca: 620, b12: 1.2 } },
+      { id: 'frischkaese', name: 'Frischkäse', cat: 'Milch & Käse', unit: 'g', defaultQty: 20, kcal: 235, p: 6.0, kh: 3.0, f: 22.0, fib: 0.0, micro: { mg: 8, fe: 0.1, zn: 0.5, ca: 95, b12: 0.3 } },
+      { id: 'skyr', name: 'Skyr Natur', cat: 'Milch & Käse', unit: 'g', defaultQty: 250, kcal: 62, p: 11.0, kh: 4.0, f: 0.2, fib: 0.0, micro: { mg: 11, fe: 0.1, zn: 0.5, ca: 130, b12: 0.5 } },
+      { id: 'joghurt_2', name: 'Griechisches Joghurt 2 %', cat: 'Milch & Käse', unit: 'g', defaultQty: 200, kcal: 73, p: 9.0, kh: 4.0, f: 2.0, fib: 0.0, micro: { mg: 11, fe: 0.1, zn: 0.5, ca: 115, b12: 0.5 } },
+      { id: 'cottage_cheese', name: 'Cottage Cheese', cat: 'Milch & Käse', unit: 'g', defaultQty: 200, kcal: 98, p: 12.5, kh: 3.2, f: 4.0, fib: 0.0, micro: { mg: 9, fe: 0.1, zn: 0.4, ca: 85, b12: 0.6 } },
+      { id: 'mozzarella', name: 'Mozzarella (klassisch)', cat: 'Milch & Käse', unit: 'g', defaultQty: 125, kcal: 254, p: 18.5, kh: 2.0, f: 19.0, fib: 0.0, micro: { mg: 20, fe: 0.4, zn: 2.2, ca: 505, b12: 1.4 } },
+
+      // Protein, Fleisch & Shakes
+      { id: 'bodyshake', name: 'Bodyshake Proteinshake (Automat)', cat: 'Protein & Shakes', unit: 'Shake', isUnit: true, defaultQty: 1, kcal: 140, p: 23.0, kh: 6.5, f: 2.0, fib: 0.5, micro: { mg: 30, fe: 0.4, zn: 1.0, ca: 280, b12: 1.0 } },
+      { id: 'whey', name: 'Whey Protein Pulver', cat: 'Protein & Shakes', unit: 'g', defaultQty: 30, kcal: 385, p: 78.0, kh: 6.5, f: 5.2, fib: 1.5, micro: { mg: 65, fe: 0.9, zn: 1.5, ca: 450, b12: 1.8 } },
+      { id: 'clear_whey', name: 'Clear Whey Isolate', cat: 'Protein & Shakes', unit: 'g', defaultQty: 30, kcal: 345, p: 82.0, kh: 2.5, f: 0.5, fib: 0.0, micro: { mg: 20, fe: 0.2, zn: 0.5, ca: 150, b12: 1.2 } },
+      { id: 'huehnerbrust', name: 'Hühnerbrustfilet (roh)', cat: 'Protein & Shakes', unit: 'g', defaultQty: 200, kcal: 110, p: 23.0, kh: 0.0, f: 1.5, fib: 0.0, micro: { mg: 28, fe: 0.7, zn: 0.9, ca: 11, b12: 0.3 } },
+      { id: 'thunfisch', name: 'Thunfisch im eigenen Saft', cat: 'Protein & Shakes', unit: 'g', defaultQty: 150, kcal: 108, p: 25.0, kh: 0.0, f: 0.8, fib: 0.0, micro: { mg: 30, fe: 1.1, zn: 0.8, ca: 14, b12: 2.5 } },
+      { id: 'eier', name: 'Vollei (1 Stk ≈ 60g)', cat: 'Protein & Shakes', unit: 'g', defaultQty: 180, kcal: 143, p: 12.6, kh: 0.7, f: 9.5, fib: 0.0, micro: { mg: 12, fe: 1.8, zn: 1.3, ca: 56, b12: 1.3 } },
+
+      // Obst & Toppings
+      { id: 'beeren', name: 'Beeren-Mix (TK / frisch)', cat: 'Obst & Toppings', unit: 'g', defaultQty: 100, kcal: 48, p: 1.0, kh: 8.5, f: 0.4, fib: 4.8, micro: { mg: 16, fe: 0.6, zn: 0.3, ca: 22, b12: 0 } },
+      { id: 'banane', name: 'Banane', cat: 'Obst & Toppings', unit: 'g', defaultQty: 120, kcal: 89, p: 1.1, kh: 20.0, f: 0.3, fib: 2.6, micro: { mg: 27, fe: 0.3, zn: 0.2, ca: 5, b12: 0 } },
+      { id: 'honig', name: 'Blütenhonig', cat: 'Obst & Toppings', unit: 'g', defaultQty: 15, kcal: 304, p: 0.4, kh: 75.1, f: 0.0, fib: 0.2, micro: { mg: 2, fe: 0.4, zn: 0.2, ca: 6, b12: 0 } },
+      { id: 'nutella', name: 'Nutella', cat: 'Obst & Toppings', unit: 'g', defaultQty: 25, kcal: 539, p: 6.3, kh: 57.5, f: 30.9, fib: 3.4, micro: { mg: 55, fe: 2.8, zn: 1.1, ca: 110, b12: 0.2 } },
+      { id: 'olivenoel', name: 'Olivenöl / Bratöl', cat: 'Obst & Toppings', unit: 'g', defaultQty: 10, kcal: 884, p: 0.0, kh: 0.0, f: 100.0, fib: 0.0, micro: { mg: 0, fe: 0.4, zn: 0, ca: 1, b12: 0 } }
+    ];
+
+    // =========================================================================
+    // 2. DEFAULT 1-CLICK MEAL PRESETS (FULLY EDITABLE & EXTENSIBLE)
+    // =========================================================================
+    const DEFAULT_PRESETS = [
+      {
+        id: 'preset_standard_jause',
+        name: 'Standard Jause',
+        icon: '🥪',
+        tag: 'Favorit',
+        items: [
+          { foodId: 'dinkelbrot', qty: 120 },
+          { foodId: 'frischkaese', qty: 20 },
+          { foodId: 'proteinkaese', qty: 80 },
+          { foodId: 'holies', qty: 50 },
+          { foodId: 'milch_35', qty: 200 }
+        ]
+      },
+      {
+        id: 'preset_skyr_bowl',
+        name: 'Skyr-Hafer-Bowl',
+        icon: '🥣',
+        tag: 'Ballaststoff-Boost',
+        items: [
+          { foodId: 'skyr', qty: 250 },
+          { foodId: 'haferflocken', qty: 60 },
+          { foodId: 'sojaflocken', qty: 20 },
+          { foodId: 'leinsamen', qty: 15 },
+          { foodId: 'beeren', qty: 100 },
+          { foodId: 'honig', qty: 15 }
+        ]
+      },
+      {
+        id: 'preset_gym_shake',
+        name: 'Gym Post-Workout',
+        icon: '🥤',
+        tag: 'Schnell',
+        items: [
+          { foodId: 'bodyshake', qty: 1 },
+          { foodId: 'banane', qty: 120 }
+        ]
+      },
+      {
+        id: 'preset_chicken_rice',
+        name: 'Airfryer Chicken & Rice',
+        icon: '🍗',
+        tag: 'Bulk-Meal',
+        items: [
+          { foodId: 'huehnerbrust', qty: 220 },
+          { foodId: 'basmatireis', qty: 110 },
+          { foodId: 'olivenoel', qty: 10 }
+        ]
+      }
+    ];
+
+    // =========================================================================
+    // 3. HPN SUPPLEMENT STACK DEFINITION
+    // =========================================================================
+    const HPN_STACK = [
+      {
+        id: 'hpn_multicore',
+        name: 'HPN Multicore',
+        subtitle: 'All-in-One Mikronährstoff-Basis',
+        timing: 'Morgens / Zur Hauptmahlzeit',
+        fatSoluble: false,
+        color: 'indigo',
+        micro: { d3: 25, k2: 50, omega3: 0, mg: 150, zn: 15, ca: 100, fe: 5, b12: 15 }
+      },
+      {
+        id: 'hpn_omega3',
+        name: 'HPN Omega 3 (EPAX)',
+        subtitle: '1.000 mg EPA + 500 mg DHA',
+        timing: 'Zu fetthaltiger Mahlzeit',
+        fatSoluble: true,
+        color: 'cyan',
+        micro: { d3: 0, k2: 0, omega3: 1500, mg: 0, zn: 0, ca: 0, fe: 0, b12: 0 }
+      },
+      {
+        id: 'hpn_d3k2',
+        name: 'HPN Vitamin D3 / K2',
+        subtitle: '5.000 IE (125 µg) D3 + 200 µg K2 MK-7',
+        timing: 'Zu fetthaltiger Mahlzeit',
+        fatSoluble: true,
+        color: 'amber',
+        micro: { d3: 125, k2: 200, omega3: 0, mg: 0, zn: 0, ca: 0, fe: 0, b12: 0 }
+      },
+      {
+        id: 'hpn_creatine',
+        name: 'HPN Creatine+',
+        subtitle: 'Täglich 6–8 g für Kraft & Zellvolumen',
+        timing: 'Täglich mit viel Wasser',
+        fatSoluble: false,
+        hasDoseStepper: true,
+        color: 'emerald',
+        micro: { d3: 0, k2: 0, omega3: 0, mg: 40, zn: 0, ca: 0, fe: 0, b12: 0 }
+      }
+    ];
+
+    const MICRO_TARGETS = [
+      { key: 'd3', label: 'Vitamin D3', unit: 'µg', target: 125, color: 'bg-amber-400' },
+      { key: 'k2', label: 'Vitamin K2', unit: 'µg', target: 200, color: 'bg-yellow-300' },
+      { key: 'omega3', label: 'Omega-3 (EPA+DHA)', unit: 'mg', target: 1500, color: 'bg-cyan-400' },
+      { key: 'mg', label: 'Magnesium', unit: 'mg', target: 400, color: 'bg-indigo-400' },
+      { key: 'zn', label: 'Zink', unit: 'mg', target: 15, color: 'bg-emerald-400' },
+      { key: 'ca', label: 'Calcium', unit: 'mg', target: 1000, color: 'bg-sky-300' },
+      { key: 'fe', label: 'Eisen', unit: 'mg', target: 10, color: 'bg-rose-400' },
+      { key: 'b12', label: 'Vitamin B12', unit: 'µg', target: 10, color: 'bg-purple-400' }
+    ];
+
+    // =========================================================================
+    // 4. STATE MANAGEMENT & LOCALSTORAGE PERSISTENCE
+    // =========================================================================
+    const STORAGE_KEY = 'nutriglass_state_v1';
+
+    function getTodayISO(offsetDays = 0) {
+      const d = new Date();
+      d.setDate(d.getDate() + offsetDays);
+      return d.toISOString().split('T')[0];
+    }
+
+    const DEFAULT_STATE = {
+      activeTab: 'today',
+      selectedDate: getTodayISO(0),
+      phase: 'bulk', // 'bulk' | 'cut'
+      goals: {
+        bulk: { kcal: 3300, p: 200, kh: 420, f: 90, fib: 35, water: 3500 },
+        cut:  { kcal: 2450, p: 215, kh: 230, f: 65, fib: 38, water: 3500 }
+      },
+      foods: DEFAULT_FOODS,
+      presets: DEFAULT_PRESETS,
+      days: {} // dateISO -> { entries: [...], supps: {...}, creatineGrams: 7, waterMl: 0 }
+    };
+
+    let state = loadState();
+    let searchFilter = '';
+    let categoryFilter = 'Alle';
+    let html5QrScanner = null;
+    let isScanning = false;
+
+    function loadState() {
+      try {
+        const raw = localStorage.getItem(STORAGE_KEY);
+        if (!raw) return JSON.parse(JSON.stringify(DEFAULT_STATE));
+        const parsed = JSON.parse(raw);
+        return {
+          ...JSON.parse(JSON.stringify(DEFAULT_STATE)),
+          ...parsed,
+          activeTab: parsed.activeTab || 'today',
+          selectedDate: parsed.selectedDate || getTodayISO(0)
+        };
+      } catch (e) {
+        return JSON.parse(JSON.stringify(DEFAULT_STATE));
+      }
+    }
+
+    function saveState() {
+      localStorage.setItem(STORAGE_KEY, JSON.stringify(state));
+    }
+
+    function getDayData(dateISO = state.selectedDate) {
+      if (!state.days[dateISO]) {
+        state.days[dateISO] = {
+          entries: [],
+          supps: {
+            hpn_multicore: false,
+            hpn_omega3: false,
+            hpn_d3k2: false,
+            hpn_creatine: false
+          },
+          creatineGrams: 7,
+          waterMl: 0
+        };
+      }
+      return state.days[dateISO];
+    }
+
+    function getFoodById(id) {
+      return state.foods.find(f => f.id === id);
+    }
+
+    function calcItemNutrition(food, qty) {
+      if (!food) return { kcal: 0, p: 0, kh: 0, f: 0, fib: 0, micro: {} };
+      const factor = food.isUnit ? qty : (qty / 100);
+      const m = food.micro || {};
+      return {
+        kcal: food.kcal * factor,
+        p: food.p * factor,
+        kh: food.kh * factor,
+        f: food.f * factor,
+        fib: (food.fib || 0) * factor,
+        micro: {
+          d3: (m.d3 || 0) * factor,
+          k2: (m.k2 || 0) * factor,
+          omega3: (m.omega3 || 0) * factor,
+          mg: (m.mg || 0) * factor,
+          zn: (m.zn || 0) * factor,
+          ca: (m.ca || 0) * factor,
+          fe: (m.fe || 0) * factor,
+          b12: (m.b12 || 0) * factor
+        }
+      };
+    }
+
+    function calcDayTotals(dateISO = state.selectedDate) {
+      const day = getDayData(dateISO);
+      const totals = {
+        kcal: 0, p: 0, kh: 0, f: 0, fib: 0,
+        micro: { d3: 0, k2: 0, omega3: 0, mg: 0, zn: 0, ca: 0, fe: 0, b12: 0 }
+      };
+
+      day.entries.forEach(entry => {
+        const food = getFoodById(entry.foodId);
+        const n = calcItemNutrition(food, entry.qty);
+        totals.kcal += n.kcal;
+        totals.p += n.p;
+        totals.kh += n.kh;
+        totals.f += n.f;
+        totals.fib += n.fib;
+        Object.keys(totals.micro).forEach(k => {
+          totals.micro[k] += (n.micro[k] || 0);
+        });
+      });
+
+      // Add checked supplements micronutrients
+      HPN_STACK.forEach(s => {
+        if (day.supps[s.id]) {
+          Object.keys(totals.micro).forEach(k => {
+            totals.micro[k] += (s.micro[k] || 0);
+          });
+        }
+      });
+
+      return totals;
+    }
+
+    // =========================================================================
+    // 5. UI HELPERS & NAVIGATION
+    // =========================================================================
+    function showToast(text, icon = '✨') {
+      const toast = document.getElementById('toast');
+      document.getElementById('toastText').textContent = text;
+      document.getElementById('toastIcon').textContent = icon;
+      toast.classList.remove('opacity-0', '-translate-y-2');
+      toast.classList.add('opacity-100', 'translate-y-0');
+      clearTimeout(window._toastTimer);
+      window._toastTimer = setTimeout(() => {
+        toast.classList.add('opacity-0', '-translate-y-2');
+        toast.classList.remove('opacity-100', 'translate-y-0');
+      }, 2200);
+    }
+
+    function formatDateLabel(dateISO) {
+      const today = getTodayISO(0);
+      const yesterday = getTodayISO(-1);
+      if (dateISO === today) return 'Heute';
+      if (dateISO === yesterday) return 'Gestern';
+      const [y, m, d] = dateISO.split('-');
+      return `${d}.${m}.${y}`;
+    }
+
+    function shiftDate(delta) {
+      const d = new Date(state.selectedDate + 'T12:00:00');
+      d.setDate(d.getDate() + delta);
+      state.selectedDate = d.toISOString().split('T')[0];
+      saveState();
+      render();
+    }
+
+    function togglePhase() {
+      state.phase = state.phase === 'bulk' ? 'cut' : 'bulk';
+      saveState();
+      render();
+      showToast(state.phase === 'bulk' ? 'Aufbau-Modus (Bulk) aktiv' : 'Definitions-Modus (Cut) aktiv', '⚡');
+    }
+
+    function switchTab(tab) {
+      if (isScanning && tab !== 'scan') {
+        stopScanner();
+      }
+      state.activeTab = tab;
+      saveState();
+      render();
+    }
+
+    function updateHeaderAndNav() {
+      const goal = state.goals[state.phase];
+      const badge = document.getElementById('phaseBadge');
+      badge.textContent = `${state.phase === 'bulk' ? 'Bulk' : 'Cut'} • ${goal.kcal}`;
+      badge.className = state.phase === 'bulk'
+        ? 'cursor-pointer text-[10px] font-semibold uppercase tracking-wider px-2 py-0.5 rounded-full bg-indigo-500/25 text-indigo-300 border border-indigo-400/30'
+        : 'cursor-pointer text-[10px] font-semibold uppercase tracking-wider px-2 py-0.5 rounded-full bg-emerald-500/25 text-emerald-300 border border-emerald-400/30';
+
+      document.getElementById('currentDateLabel').textContent = formatDateLabel(state.selectedDate);
+
+      document.querySelectorAll('.nav-btn').forEach(btn => {
+        const active = btn.dataset.tab === state.activeTab;
+        btn.className = active
+          ? 'nav-btn flex flex-col items-center justify-center py-2 rounded-2xl text-[11px] font-semibold bg-white/12 text-cyan-300 border border-white/15 shadow-inner transition-all'
+          : 'nav-btn flex flex-col items-center justify-center py-2 rounded-2xl text-[11px] font-medium text-slate-400 hover:text-slate-200 transition-all';
+      });
+    }
+
+    // =========================================================================
+    // 6. CORE ACTIONS (LOG, PRESETS, WATER, SUPPS)
+    // =========================================================================
+    function addFoodEntry(foodId, qty, groupLabel = null) {
+      const food = getFoodById(foodId);
+      if (!food) return;
+      const day = getDayData();
+      day.entries.push({
+        id: 'ent_' + Date.now() + '_' + Math.random().toString(36).slice(2, 6),
+        foodId,
+        qty: Number(qty),
+        groupLabel
+      });
+      saveState();
+      render();
+      showToast(`${qty} ${food.unit} ${food.name} hinzugefügt`, '✅');
+    }
+
+    function applyPreset(presetId) {
+      const preset = state.presets.find(p => p.id === presetId);
+      if (!preset) return;
+      const day = getDayData();
+      preset.items.forEach((item, idx) => {
+        const food = getFoodById(item.foodId);
+        if (food) {
+          day.entries.push({
+            id: 'ent_' + Date.now() + '_' + idx + '_' + Math.random().toString(36).slice(2, 5),
+            foodId: item.foodId,
+            qty: Number(item.qty),
+            groupLabel: preset.name
+          });
+        }
+      });
+      saveState();
+      render();
+      showToast(`${preset.icon} ${preset.name} geloggt!`, '⚡');
+    }
+
+    function updateEntryQty(entryId, deltaOrValue, isAbsolute = false) {
+      const day = getDayData();
+      const entry = day.entries.find(e => e.id === entryId);
+      if (!entry) return;
+      const food = getFoodById(entry.foodId);
+      const step = food?.isUnit ? 0.5 : 5;
+      if (isAbsolute) {
+        const val = parseFloat(deltaOrValue);
+        if (!isNaN(val) && val > 0) entry.qty = val;
+      } else {
+        entry.qty = Math.max(step, Math.round((entry.qty + deltaOrValue) * 10) / 10);
+      }
+      saveState();
+      render();
+    }
+
+    function removeEntry(entryId) {
+      const day = getDayData();
+      day.entries = day.entries.filter(e => e.id !== entryId);
+      saveState();
+      render();
+      showToast('Eintrag entfernt', '🗑️');
+    }
+
+    function addWater(ml) {
+      const day = getDayData();
+      day.waterMl = Math.max(0, (day.waterMl || 0) + ml);
+      saveState();
+      render();
+      if (ml > 0) showToast(`+${ml} ml Wasser`, '💧');
+    }
+
+    function toggleSupp(suppId) {
+      const day = getDayData();
+      day.supps[suppId] = !day.supps[suppId];
+      saveState();
+      render();
+      const supp = HPN_STACK.find(s => s.id === suppId);
+      if (day.supps[suppId] && supp) {
+        showToast(`${supp.name} abgehakt`, '💊');
+      }
+    }
+
+    function changeCreatineDose(delta) {
+      const day = getDayData();
+      day.creatineGrams = Math.min(12, Math.max(3, (day.creatineGrams || 7) + delta));
+      saveState();
+      render();
+    }
+
+    // =========================================================================
+    // 7. VIEW 1: HEUTE (DASHBOARD, 1-KLICK MEALS, LOG)
+    // =========================================================================
+    function renderTodayView() {
+      const day = getDayData();
+      const totals = calcDayTotals();
+      const goal = state.goals[state.phase];
+
+      const kcalPct = Math.min(100, Math.round((totals.kcal / goal.kcal) * 100));
+      const pPct = Math.min(100, Math.round((totals.p / goal.p) * 100));
+      const khPct = Math.min(100, Math.round((totals.kh / goal.kh) * 100));
+      const fPct = Math.min(100, Math.round((totals.f / goal.f) * 100));
+      const fibPct = Math.min(100, Math.round((totals.fib / goal.fib) * 100));
+      const waterPct = Math.min(100, Math.round(((day.waterMl || 0) / goal.water) * 100));
+      const remainingKcal = Math.round(goal.kcal - totals.kcal);
+
+      const suppsDoneCount = HPN_STACK.filter(s => day.supps[s.id]).length;
+
+      // 1-Click Meals Carousel HTML
+      const presetsHTML = state.presets.map(preset => {
+        let pKcal = 0, pProt = 0, pFib = 0;
+        preset.items.forEach(it => {
+          const n = calcItemNutrition(getFoodById(it.foodId), it.qty);
+          pKcal += n.kcal; pProt += n.p; pFib += n.fib;
+        });
+        return `
+          <div onclick="applyPreset('${preset.id}')" class="glass-card shrink-0 w-[168px] p-3.5 rounded-2xl cursor-pointer active:scale-95 transition-transform flex flex-col justify-between border-white/12 hover:border-cyan-400/35">
+            <div>
+              <div class="flex items-center justify-between mb-1.5">
+                <span class="text-xl">${preset.icon}</span>
+                <span class="text-[10px] font-semibold px-2 py-0.5 rounded-full bg-white/10 text-cyan-300">+1 Klick</span>
+              </div>
+              <div class="text-xs font-bold text-white leading-snug line-clamp-1">${preset.name}</div>
+              <div class="text-[10px] text-slate-400 mt-0.5">${preset.items.length} Zutaten</div>
+            </div>
+            <div class="mt-3 pt-2 border-t border-white/10 flex items-center justify-between text-[11px]">
+              <span class="font-bold text-indigo-300">${Math.round(pKcal)} kcal</span>
+              <span class="font-semibold text-emerald-300">${pProt.toFixed(0)}g P</span>
+              <span class="font-semibold text-cyan-300">${pFib.toFixed(1)}g B</span>
+            </div>
+          </div>
+        `;
+      }).join('');
+
+      // Logged Entries HTML
+      const entriesHTML = day.entries.length === 0
+        ? `
+          <div class="glass-subtle rounded-2xl p-6 text-center">
+            <div class="text-2xl mb-1.5">🍽️</div>
+            <div class="text-xs font-semibold text-slate-200">Noch nichts geloggt</div>
+            <p class="text-[11px] text-slate-400 mt-1">Wähle oben deine <span class="text-cyan-300 font-medium">Standard Jause</span> mit 1 Klick oder scanne einen Barcode.</p>
+          </div>
+        `
+        : day.entries.map(entry => {
+            const food = getFoodById(entry.foodId);
+            if (!food) return '';
+            const n = calcItemNutrition(food, entry.qty);
+            const step = food.isUnit ? 0.5 : 10;
+            return `
+              <div class="glass-card p-3 rounded-2xl flex items-center justify-between gap-2.5">
+                <div class="min-w-0 flex-1">
+                  <div class="flex items-center gap-1.5">
+                    <span class="text-xs font-semibold text-white truncate">${food.name}</span>
+                    ${entry.groupLabel ? `<span class="text-[9px] px-1.5 py-0.5 rounded bg-indigo-500/20 text-indigo-300 shrink-0">${entry.groupLabel}</span>` : ''}
+                  </div>
+                  <div class="flex flex-wrap items-center gap-x-2.5 gap-y-0.5 mt-1 text-[11px]">
+                    <span class="font-bold text-indigo-300">${Math.round(n.kcal)} kcal</span>
+                    <span class="text-emerald-300 font-medium">${n.p.toFixed(1)}g P</span>
+                    <span class="text-amber-300">${n.kh.toFixed(1)}g KH</span>
+                    <span class="text-rose-300">${n.f.toFixed(1)}g F</span>
+                    <span class="text-cyan-300 font-medium">${n.fib.toFixed(1)}g Ballastst.</span>
+                  </div>
+                </div>
+
+                <div class="flex items-center gap-1 shrink-0">
+                  <button onclick="updateEntryQty('${entry.id}', -${step})" class="w-7 h-7 rounded-xl bg-white/8 hover:bg-white/15 text-slate-200 font-bold text-sm flex items-center justify-center">−</button>
+                  <div class="flex items-center bg-black/30 border border-white/10 rounded-xl px-1.5 py-1">
+                    <input type="number" step="any" value="${entry.qty}" onchange="updateEntryQty('${entry.id}', this.value, true)" class="w-10 bg-transparent text-center text-xs font-bold text-white focus:outline-none" />
+                    <span class="text-[10px] text-slate-400 pr-0.5">${food.unit}</span>
+                  </div>
+                  <button onclick="updateEntryQty('${entry.id}', ${step})" class="w-7 h-7 rounded-xl bg-white/8 hover:bg-white/15 text-slate-200 font-bold text-sm flex items-center justify-center">+</button>
+                  <button onclick="removeEntry('${entry.id}')" class="w-7 h-7 rounded-xl text-slate-500 hover:text-rose-400 flex items-center justify-center ml-0.5" title="Löschen">✕</button>
+                </div>
+              </div>
+            `;
+          }).join('');
+
+      return `
+        <div class="tab-view space-y-4">
+          <!-- Hero Calorie & Macro Glass Card -->
+          <section class="glass-card rounded-[28px] p-4 relative overflow-hidden">
+            <div class="flex items-center justify-between mb-3">
+              <div>
+                <span class="text-[11px] font-semibold uppercase tracking-wider text-slate-400">Tagesbilanz</span>
+                <div class="flex items-baseline gap-2 mt-0.5">
+                  <span class="text-3xl font-extrabold tracking-tight text-white">${Math.round(totals.kcal).toLocaleString('de-DE')}</span>
+                  <span class="text-xs font-medium text-slate-400">/ ${goal.kcal.toLocaleString('de-DE')} kcal</span>
+                </div>
+              </div>
+              <div class="text-right">
+                <span class="inline-block text-[11px] font-semibold px-2.5 py-1 rounded-full ${remainingKcal >= 0 ? 'bg-indigo-500/20 text-indigo-300 border border-indigo-400/25' : 'bg-rose-500/20 text-rose-300 border border-rose-400/25'}">
+                  ${remainingKcal >= 0 ? `${remainingKcal} kcal offen` : `+${Math.abs(remainingKcal)} kcal über Ziel`}
+                </span>
+                <div class="text-[11px] text-slate-400 mt-1">${kcalPct} % erreicht</div>
+              </div>
+            </div>
+
+            <!-- Main Calorie Progress Bar -->
+            <div class="w-full h-2.5 rounded-full bg-white/8 overflow-hidden mb-4">
+              <div class="h-full rounded-full bg-gradient-to-r from-indigo-500 via-purple-400 to-cyan-400 transition-all duration-500" style="width: ${kcalPct}%"></div>
+            </div>
+
+            <!-- 4 Macro & Fiber Tiles -->
+            <div class="grid grid-cols-2 gap-2.5">
+              <!-- Protein -->
+              <div class="glass-subtle rounded-2xl p-2.5">
+                <div class="flex justify-between items-center text-[11px]">
+                  <span class="font-semibold text-emerald-300">Protein</span>
+                  <span class="text-slate-400">${pPct}%</span>
+                </div>
+                <div class="text-sm font-bold text-white mt-0.5">${totals.p.toFixed(1)} <span class="text-[11px] font-normal text-slate-400">/ ${goal.p}g</span></div>
+                <div class="w-full h-1.5 rounded-full bg-white/10 mt-1.5 overflow-hidden">
+                  <div class="h-full bg-emerald-400 rounded-full transition-all duration-500" style="width:${pPct}%"></div>
+                </div>
+              </div>
+
+              <!-- Ballaststoffe (Highlighted!) -->
+              <div class="rounded-2xl p-2.5 bg-cyan-500/12 border border-cyan-400/30">
+                <div class="flex justify-between items-center text-[11px]">
+                  <span class="font-bold text-cyan-300">Ballaststoffe</span>
+                  <span class="text-cyan-200 font-semibold">${fibPct}%</span>
+                </div>
+                <div class="text-sm font-extrabold text-white mt-0.5">${totals.fib.toFixed(1)} <span class="text-[11px] font-normal text-cyan-200/70">/ ${goal.fib}g</span></div>
+                <div class="w-full h-1.5 rounded-full bg-cyan-950/60 mt-1.5 overflow-hidden">
+                  <div class="h-full bg-cyan-400 rounded-full transition-all duration-500" style="width:${fibPct}%"></div>
+                </div>
+              </div>
+
+              <!-- Kohlenhydrate -->
+              <div class="glass-subtle rounded-2xl p-2.5">
+                <div class="flex justify-between items-center text-[11px]">
+                  <span class="font-semibold text-amber-300">Kohlenhydrate</span>
+                  <span class="text-slate-400">${khPct}%</span>
+                </div>
+                <div class="text-sm font-bold text-white mt-0.5">${totals.kh.toFixed(1)} <span class="text-[11px] font-normal text-slate-400">/ ${goal.kh}g</span></div>
+                <div class="w-full h-1.5 rounded-full bg-white/10 mt-1.5 overflow-hidden">
+                  <div class="h-full bg-amber-400 rounded-full transition-all duration-500" style="width:${khPct}%"></div>
+                </div>
+              </div>
+
+              <!-- Fett -->
+              <div class="glass-subtle rounded-2xl p-2.5">
+                <div class="flex justify-between items-center text-[11px]">
+                  <span class="font-semibold text-rose-300">Fett</span>
+                  <span class="text-slate-400">${fPct}%</span>
+                </div>
+                <div class="text-sm font-bold text-white mt-0.5">${totals.f.toFixed(1)} <span class="text-[11px] font-normal text-slate-400">/ ${goal.f}g</span></div>
+                <div class="w-full h-1.5 rounded-full bg-white/10 mt-1.5 overflow-hidden">
+                  <div class="h-full bg-rose-400 rounded-full transition-all duration-500" style="width:${fPct}%"></div>
+                </div>
+              </div>
+            </div>
+          </section>
+
+          <!-- Compact Hydration & HPN Stack Bar -->
+          <section class="grid grid-cols-2 gap-2.5">
+            <!-- Water Tracker -->
+            <div class="glass-card rounded-2xl p-3 flex flex-col justify-between">
+              <div class="flex items-center justify-between">
+                <span class="text-[11px] font-semibold text-sky-300">💧 Wasser</span>
+                <span class="text-[10px] text-slate-400">${waterPct}%</span>
+              </div>
+              <div class="text-sm font-bold text-white my-1">${((day.waterMl || 0) / 1000).toFixed(2)} <span class="text-[11px] font-normal text-slate-400">/ ${(goal.water / 1000).toFixed(1)} L</span></div>
+              <div class="flex gap-1.5 mt-1">
+                <button onclick="addWater(250)" class="flex-1 py-1 rounded-xl bg-sky-500/20 hover:bg-sky-500/30 border border-sky-400/25 text-[11px] font-semibold text-sky-200">+250</button>
+                <button onclick="addWater(500)" class="flex-1 py-1 rounded-xl bg-sky-500/20 hover:bg-sky-500/30 border border-sky-400/25 text-[11px] font-semibold text-sky-200">+500</button>
+              </div>
+            </div>
+
+            <!-- HPN Stack Quick Status -->
+            <div onclick="switchTab('supps')" class="glass-card rounded-2xl p-3 flex flex-col justify-between cursor-pointer hover:border-indigo-400/35">
+              <div class="flex items-center justify-between">
+                <span class="text-[11px] font-semibold text-indigo-300">💊 HPN Stack</span>
+                <span class="text-[10px] font-bold px-1.5 py-0.5 rounded-full ${suppsDoneCount === HPN_STACK.length ? 'bg-emerald-500/25 text-emerald-300' : 'bg-white/10 text-slate-300'}">${suppsDoneCount}/${HPN_STACK.length}</span>
+              </div>
+              <div class="text-xs font-medium text-slate-300 my-1 leading-tight">
+                ${suppsDoneCount === HPN_STACK.length ? 'Kompletter Stack erledigt!' : 'Tippen für Check-in & Mikros'}
+              </div>
+              <div class="flex gap-1 mt-1">
+                ${HPN_STACK.map(s => `<div class="h-1.5 flex-1 rounded-full ${day.supps[s.id] ? 'bg-emerald-400' : 'bg-white/12'}"></div>`).join('')}
+              </div>
+            </div>
+          </section>
+
+          <!-- 1-Click Meals Section -->
+          <section>
+            <div class="flex items-center justify-between mb-2">
+              <h2 class="text-xs font-bold uppercase tracking-wider text-slate-300 flex items-center gap-1.5">
+                <span class="text-cyan-400">⚡</span> 1-Klick Mahlzeiten
+              </h2>
+              <button onclick="openPresetEditorModal()" class="text-[11px] font-semibold text-cyan-300 hover:text-cyan-200">
+                + Konfigurieren
+              </button>
+            </div>
+            <div class="flex gap-2.5 overflow-x-auto no-scrollbar pb-1">
+              ${presetsHTML}
+            </div>
+          </section>
+
+          <!-- Today's Food Log -->
+          <section class="space-y-2.5">
+            <div class="flex items-center justify-between">
+              <h2 class="text-xs font-bold uppercase tracking-wider text-slate-300">Heutiges Log (${day.entries.length})</h2>
+              ${day.entries.length > 0 ? `
+                <button onclick="saveCurrentDayAsPreset()" class="text-[11px] font-semibold text-indigo-300 hover:text-indigo-200 bg-indigo-500/15 border border-indigo-400/25 px-2.5 py-1 rounded-xl">
+                  💾 Als 1-Klick Mahlzeit speichern
+                </button>
+              ` : ''}
+            </div>
+            <div class="space-y-2">
+              ${entriesHTML}
+            </div>
+          </section>
+        </div>
+      `;
+    }
+
+    // =========================================================================
+    // 8. VIEW 2: BARCODE SCANNER & LEBENSMITTEL-SUCHE
+    // =========================================================================
+    function renderScanView() {
+      const categories = ['Alle', 'Brot & Getreide', 'Milch & Käse', 'Protein & Shakes', 'Obst & Toppings', 'Gescannt & Eigene'];
+      const filteredFoods = state.foods.filter(f => {
+        const matchesSearch = f.name.toLowerCase().includes(searchFilter.toLowerCase());
+        const matchesCat = categoryFilter === 'Alle' || f.cat === categoryFilter;
+        return matchesSearch && matchesCat;
+      });
+
+      return `
+        <div class="tab-view space-y-4">
+          <!-- Barcode Scanner Card -->
+          <section class="glass-card rounded-[26px] p-4 space-y-3">
+            <div class="flex items-center justify-between">
+              <div>
+                <h2 class="text-sm font-bold text-white flex items-center gap-1.5">📷 Open Food Facts Scanner</h2>
+                <p class="text-[11px] text-slate-400">EAN-Barcode scannen & automatisch lokal speichern</p>
+              </div>
+              <button onclick="toggleBarcodeCamera()" id="cameraToggleBtn" class="px-3.5 py-2 rounded-2xl text-xs font-bold ${isScanning ? 'bg-rose-500/25 text-rose-300 border border-rose-400/30' : 'bg-cyan-500/25 text-cyan-300 border border-cyan-400/35'}">
+                ${isScanning ? 'Kamera stoppen' : 'Kamera starten'}
+              </button>
+            </div>
+
+            <!-- Live Camera Viewport -->
+            <div id="scannerContainer" class="${isScanning ? 'block' : 'hidden'} rounded-2xl overflow-hidden bg-black/50 border border-white/15">
+              <div id="qr-reader" class="w-full"></div>
+            </div>
+
+            <!-- Manual EAN Fallback / Quick Test -->
+            <div class="flex gap-2">
+              <input id="manualBarcodeInput" type="text" inputmode="numeric" placeholder="Oder EAN-Code eingeben (z. B. 9002490100070)..." class="flex-1 bg-black/35 border border-white/12 rounded-2xl px-3.5 py-2.5 text-xs text-white placeholder-slate-500 focus:outline-none focus:border-cyan-400/50" />
+              <button onclick="lookupManualBarcode()" class="glass-pill px-4 py-2.5 rounded-2xl text-xs font-bold text-white bg-white/10 hover:bg-white/15">
+                Suchen
+              </button>
+            </div>
+            <div id="barcodeStatus" class="hidden text-xs p-3 rounded-2xl glass-subtle"></div>
+          </section>
+
+          <!-- Search & Create Custom Food -->
+          <section class="space-y-3">
+            <div class="flex gap-2">
+              <div class="relative flex-1">
+                <input type="text" value="${searchFilter}" oninput="searchFilter = this.value; renderFoodListOnly();" placeholder="Lebensmittel suchen (z. B. Holies, Proteinkäse)..." class="w-full bg-white/[0.06] border border-white/12 rounded-2xl pl-9 pr-3.5 py-2.5 text-xs text-white placeholder-slate-400 focus:outline-none focus:border-indigo-400/50" />
+                <span class="absolute left-3 top-2.5 text-slate-400 text-xs">🔍</span>
+              </div>
+              <button onclick="openNewFoodModal()" class="glass-pill px-3.5 py-2.5 rounded-2xl text-xs font-bold text-emerald-300 border-emerald-400/30 bg-emerald-500/15 shrink-0">
+                + Neu
+              </button>
+            </div>
+
+            <!-- Category Pills -->
+            <div class="flex gap-1.5 overflow-x-auto no-scrollbar pb-0.5">
+              ${categories.map(cat => `
+                <button onclick="categoryFilter = '${cat}'; render();" class="shrink-0 px-3 py-1.5 rounded-full text-[11px] font-semibold transition-all ${categoryFilter === cat ? 'bg-indigo-500/30 text-white border border-indigo-400/40' : 'bg-white/5 text-slate-400 border border-white/8'}">
+                  ${cat}
+                </button>
+              `).join('')}
+            </div>
+
+            <!-- Food List -->
+            <div id="foodListContainer" class="space-y-2">
+              ${renderFoodItemsList(filteredFoods)}
+            </div>
+          </section>
+        </div>
+      `;
+    }
+
+    function renderFoodItemsList(list) {
+      if (list.length === 0) {
+        return `<div class="glass-subtle rounded-2xl p-5 text-center text-xs text-slate-400">Keine Treffer. Über <span class="text-emerald-300 font-semibold">+ Neu</span> kannst du das Lebensmittel direkt anlegen.</div>`;
+      }
+      return list.map(food => `
+        <div class="glass-card p-3 rounded-2xl flex items-center justify-between gap-2">
+          <div class="min-w-0 flex-1">
+            <div class="text-xs font-bold text-white truncate">${food.name}</div>
+            <div class="text-[10px] text-slate-400 mt-0.5">
+              Pro ${food.isUnit ? '1 ' + food.unit : '100 ' + food.unit}:
+              <span class="text-indigo-300 font-semibold">${food.kcal} kcal</span> •
+              <span class="text-emerald-300">${food.p}g P</span> •
+              <span class="text-amber-300">${food.kh}g KH</span> •
+              <span class="text-rose-300">${food.f}g F</span> •
+              <span class="text-cyan-300">${food.fib || 0}g B</span>
+            </div>
+          </div>
+          <div class="flex items-center gap-1.5 shrink-0">
+            <input id="qty_input_${food.id}" type="number" step="any" value="${food.defaultQty}" class="w-14 bg-black/40 border border-white/15 rounded-xl py-1.5 px-2 text-center text-xs font-bold text-white focus:outline-none focus:border-cyan-400" />
+            <span class="text-[10px] text-slate-400 w-6">${food.unit}</span>
+            <button onclick="addFoodEntry('${food.id}', document.getElementById('qty_input_${food.id}').value)" class="px-3 py-1.5 rounded-xl bg-cyan-500/25 hover:bg-cyan-500/35 border border-cyan-400/35 text-xs font-bold text-cyan-200">
+              +
+            </button>
+          </div>
+        </div>
+      `).join('');
+    }
+
+    function renderFoodListOnly() {
+      const container = document.getElementById('foodListContainer');
+      if (!container) return;
+      const filteredFoods = state.foods.filter(f => {
+        const matchesSearch = f.name.toLowerCase().includes(searchFilter.toLowerCase());
+        const matchesCat = categoryFilter === 'Alle' || f.cat === categoryFilter;
+        return matchesSearch && matchesCat;
+      });
+      container.innerHTML = renderFoodItemsList(filteredFoods);
+    }
+
+    // Open Food Facts Barcode Logic
+    function toggleBarcodeCamera() {
+      if (isScanning) {
+        stopScanner();
+      } else {
+        startScanner();
+      }
+    }
+
+    function startScanner() {
+      const container = document.getElementById('scannerContainer');
+      const btn = document.getElementById('cameraToggleBtn');
+      if (!container) return;
+      container.classList.remove('hidden');
+      isScanning = true;
+      if (btn) btn.textContent = 'Kamera stoppen';
+
+      if (typeof Html5Qrcode === 'undefined') {
+        showBarcodeStatus('Scanner-Bibliothek lädt noch oder ist offline. Nutze das EAN-Eingabefeld.', 'amber');
+        return;
+      }
+
+      html5QrScanner = new Html5Qrcode('qr-reader');
+      html5QrScanner.start(
+        { facingMode: 'environment' },
+        { fps: 10, qrbox: { width: 250, height: 140 } },
+        (decodedText) => {
+          stopScanner();
+          fetchOpenFoodFacts(decodedText);
+        },
+        () => {}
+      ).catch(err => {
+        isScanning = false;
+        container.classList.add('hidden');
+        if (btn) btn.textContent = 'Kamera starten';
+        showBarcodeStatus('Kamerazugriff nicht möglich (HTTPS & Berechtigung prüfen). Du kannst den EAN-Code unten manuell eingeben.', 'amber');
+      });
+    }
+
+    function stopScanner() {
+      if (html5QrScanner && isScanning) {
+        html5QrScanner.stop().then(() => {
+          html5QrScanner.clear();
+        }).catch(() => {});
+      }
+      isScanning = false;
+      const container = document.getElementById('scannerContainer');
+      const btn = document.getElementById('cameraToggleBtn');
+      if (container) container.classList.add('hidden');
+      if (btn) btn.textContent = 'Kamera starten';
+    }
+
+    function lookupManualBarcode() {
+      const input = document.getElementById('manualBarcodeInput');
+      const code = (input?.value || '').trim();
+      if (!code) {
+        showToast('Bitte EAN-Barcode eingeben', '⚠️');
+        return;
+      }
+      fetchOpenFoodFacts(code);
+    }
+
+    function showBarcodeStatus(html, tone = 'cyan') {
+      const box = document.getElementById('barcodeStatus');
+      if (!box) return;
+      box.classList.remove('hidden');
+      box.className = `text-xs p-3 rounded-2xl border ${tone === 'amber' ? 'bg-amber-500/15 border-amber-400/30 text-amber-200' : 'bg-cyan-500/15 border-cyan-400/30 text-cyan-100'}`;
+      box.innerHTML = html;
+    }
+
+    async function fetchOpenFoodFacts(barcode) {
+      showBarcodeStatus(`Suche Barcode <b>${barcode}</b> in Open Food Facts...`, 'cyan');
+      try {
+        const res = await fetch(`https://world.openfoodfacts.org/api/v2/product/${encodeURIComponent(barcode)}.json`);
+        const data = await res.json();
+        if (data.status !== 1 || !data.product) {
+          showBarcodeStatus(`Produkt für EAN <b>${barcode}</b> nicht gefunden. Über <b>+ Neu</b> kannst du es manuell anlegen.`, 'amber');
+          return;
+        }
+        const p = data.product;
+        const nutr = p.nutriments || {};
+        const name = (p.product_name_de || p.product_name || 'Gescanntes Produkt') + (p.brands ? ` (${p.brands.split(',')[0]})` : '');
+        const kcal = Math.round(nutr['energy-kcal_100g'] || (nutr['energy_100g'] ? nutr['energy_100g'] / 4.184 : 0));
+        const protein = Number((nutr['proteins_100g'] || 0).toFixed(1));
+        const carbs = Number((nutr['carbohydrates_100g'] || 0).toFixed(1));
+        const fat = Number((nutr['fat_100g'] || 0).toFixed(1));
+        const fiber = Number((nutr['fiber_100g'] || 0).toFixed(1));
+
+        const newId = 'off_' + barcode;
+        const existingIdx = state.foods.findIndex(f => f.id === newId);
+        const foodObj = {
+          id: newId,
+          name,
+          cat: 'Gescannt & Eigene',
+          unit: 'g',
+          defaultQty: 100,
+          kcal,
+          p: protein,
+          kh: carbs,
+          f: fat,
+          fib: fiber,
+          micro: {
+            ca: Math.round((nutr['calcium_100g'] || 0) * 1000),
+            mg: Math.round((nutr['magnesium_100g'] || 0) * 1000),
+            fe: Number(((nutr['iron_100g'] || 0) * 1000).toFixed(1)),
+            zn: Number(((nutr['zinc_100g'] || 0) * 1000).toFixed(1)),
+            b12: Number(((nutr['vitamin-b12_100g'] || 0) * 1000000).toFixed(1))
+          }
+        };
+
+        if (existingIdx >= 0) {
+          state.foods[existingIdx] = foodObj;
+        } else {
+          state.foods.unshift(foodObj);
+        }
+        saveState();
+        renderFoodListOnly();
+
+        showBarcodeStatus(`
+          <div class="font-bold text-white mb-1">✅ ${name}</div>
+          <div class="text-[11px] text-slate-300 mb-2">Pro 100g: ${kcal} kcal • ${protein}g P • ${carbs}g KH • ${fat}g F • ${fiber}g Ballaststoffe</div>
+          <div class="flex items-center gap-2">
+            <input id="scannedAddQty" type="number" value="100" class="w-20 bg-black/40 border border-white/20 rounded-xl px-2.5 py-1.5 text-xs font-bold text-white text-center" />
+            <span class="text-xs text-slate-300">g</span>
+            <button onclick="addFoodEntry('${newId}', document.getElementById('scannedAddQty').value)" class="flex-1 py-1.5 px-3 rounded-xl bg-emerald-500/30 border border-emerald-400/40 text-xs font-bold text-emerald-200">
+              Jetzt loggen
+            </button>
+          </div>
+        `, 'cyan');
+      } catch (err) {
+        showBarcodeStatus('Netzwerkfehler bei Open Food Facts. Prüfe deine Internetverbindung.', 'amber');
+      }
+    }
+
+    // =========================================================================
+    // 9. VIEW 3: HPN SUPPLEMENT STACK & MIKRONÄHRSTOFFE
+    // =========================================================================
+    function renderSuppsView() {
+      const day = getDayData();
+      const totals = calcDayTotals();
+      const hasEnoughFat = totals.f >= 10;
+
+      const stackCards = HPN_STACK.map(s => {
+        const checked = !!day.supps[s.id];
+        return `
+          <div onclick="toggleSupp('${s.id}')" class="glass-card p-3.5 rounded-2xl cursor-pointer transition-all ${checked ? 'border-emerald-400/45 bg-emerald-500/10' : 'border-white/10'}">
+            <div class="flex items-center justify-between gap-3">
+              <div class="flex items-center gap-3">
+                <div class="w-7 h-7 rounded-xl flex items-center justify-center border ${checked ? 'bg-emerald-500 text-slate-950 border-emerald-400 font-extrabold' : 'bg-white/5 border-white/20 text-transparent'}">
+                  ✓
+                </div>
+                <div>
+                  <div class="flex items-center gap-2">
+                    <span class="text-xs font-bold text-white">${s.name}</span>
+                    ${s.fatSoluble ? `<span class="text-[9px] font-semibold px-1.5 py-0.5 rounded bg-amber-500/20 text-amber-300 border border-amber-400/25">Fettlöslich</span>` : ''}
+                  </div>
+                  <div class="text-[11px] text-slate-300 mt-0.5">${s.subtitle}</div>
+                  <div class="text-[10px] text-slate-400 mt-0.5">⏰ ${s.timing}</div>
+                </div>
+              </div>
+
+              ${s.hasDoseStepper ? `
+                <div onclick="event.stopPropagation()" class="flex items-center gap-1 bg-black/35 border border-white/12 rounded-xl p-1">
+                  <button onclick="changeCreatineDose(-1)" class="w-6 h-6 rounded-lg bg-white/10 text-xs font-bold text-white">−</button>
+                  <span class="text-xs font-extrabold text-emerald-300 px-1.5">${day.creatineGrams || 7}g</span>
+                  <button onclick="changeCreatineDose(1)" class="w-6 h-6 rounded-lg bg-white/10 text-xs font-bold text-white">+</button>
+                </div>
+              ` : ''}
+            </div>
+          </div>
+        `;
+      }).join('');
+
+      const microBars = MICRO_TARGETS.map(m => {
+        const val = totals.micro[m.key] || 0;
+        const pct = Math.min(100, Math.round((val / m.target) * 100));
+        return `
+          <div class="space-y-1">
+            <div class="flex justify-between text-[11px]">
+              <span class="font-semibold text-slate-200">${m.label}</span>
+              <span class="text-slate-300 font-medium">${val < 10 ? val.toFixed(1) : Math.round(val)} / ${m.target} ${m.unit} <span class="text-slate-400">(${pct}%)</span></span>
+            </div>
+            <div class="w-full h-2 rounded-full bg-white/8 overflow-hidden">
+              <div class="h-full ${m.color} rounded-full transition-all duration-500" style="width: ${pct}%"></div>
+            </div>
+          </div>
+        `;
+      }).join('');
+
+      return `
+        <div class="tab-view space-y-4">
+          <!-- Smart Absorption Status -->
+          <div class="glass-card rounded-2xl p-3.5 border ${hasEnoughFat ? 'border-emerald-400/35 bg-emerald-500/10' : 'border-amber-400/35 bg-amber-500/10'}">
+            <div class="flex items-start gap-2.5">
+              <span class="text-lg">${hasEnoughFat ? '🟢' : '💡'}</span>
+              <div>
+                <div class="text-xs font-bold ${hasEnoughFat ? 'text-emerald-300' : 'text-amber-300'}">
+                  ${hasEnoughFat ? 'Optimale Aufnahme für D3/K2 & Omega 3' : 'Hinweis zur Bioverfügbarkeit'}
+                </div>
+                <p class="text-[11px] text-slate-300 mt-0.5 leading-relaxed">
+                  ${hasEnoughFat
+                    ? `Du hast heute bereits <b>${totals.f.toFixed(1)} g Nahrungsfett</b> geloggt – ideale Basis für deine fettlöslichen HPN-Supplements.`
+                    : `Aktuell erst <b>${totals.f.toFixed(1)} g Fett</b> geloggt. Nimm HPN D3/K2 & Omega 3 idealerweise zusammen mit deiner Jause (Käse/Milch 3,5 %) ein.`}
+                </p>
+              </div>
+            </div>
+          </div>
+
+          <!-- HPN Stack Check-In -->
+          <section class="space-y-2.5">
+            <div class="flex items-center justify-between">
+              <h2 class="text-xs font-bold uppercase tracking-wider text-slate-300">Dein HPN Supplement Stack</h2>
+              <button onclick="HPN_STACK.forEach(s => { getDayData().supps[s.id] = true; }); saveState(); render(); showToast('Kompletter HPN Stack abgehakt!', '💊');" class="text-[11px] font-semibold text-emerald-300">
+                Alle abhaken
+              </button>
+            </div>
+            <div class="space-y-2">
+              ${stackCards}
+            </div>
+          </section>
+
+          <!-- Combined Micronutrient Coverage -->
+          <section class="glass-card rounded-[26px] p-4 space-y-3">
+            <div>
+              <h2 class="text-sm font-bold text-white">Mikronährstoff-Bilanz</h2>
+              <p class="text-[11px] text-slate-400">Kombiniert aus heutigen Lebensmitteln + abgehaktem Stack</p>
+            </div>
+            <div class="space-y-3 pt-1">
+              ${microBars}
+            </div>
+          </section>
+        </div>
+      `;
+    }
+
+    // =========================================================================
+    // 10. VIEW 4: 1-KLICK MAHLZEITEN KONFIGURATOR, VERLAUF & BACKUP
+    // =========================================================================
+    function renderPresetsAndMoreView() {
+      const presetListHTML = state.presets.map(preset => {
+        let pKcal = 0, pProt = 0, pKh = 0, pF = 0, pFib = 0;
+        const ingNames = preset.items.map(it => {
+          const food = getFoodById(it.foodId);
+          if (!food) return '';
+          const n = calcItemNutrition(food, it.qty);
+          pKcal += n.kcal; pProt += n.p; pKh += n.kh; pF += n.f; pFib += n.fib;
+          return `${it.qty}${food.unit} ${food.name}`;
+        }).filter(Boolean).join(' • ');
+
+        return `
+          <div class="glass-card p-3.5 rounded-2xl space-y-2.5">
+            <div class="flex items-start justify-between gap-2">
+              <div class="flex items-center gap-2.5">
+                <span class="text-2xl">${preset.icon}</span>
+                <div>
+                  <div class="text-sm font-bold text-white">${preset.name}</div>
+                  <div class="text-[11px] text-slate-400 line-clamp-2 mt-0.5">${ingNames}</div>
+                </div>
+              </div>
+              <button onclick="applyPreset('${preset.id}')" class="shrink-0 px-3 py-1.5 rounded-xl bg-cyan-500/25 border border-cyan-400/35 text-xs font-bold text-cyan-200">
+                + Loggen
+              </button>
+            </div>
+            <div class="flex items-center justify-between pt-2 border-t border-white/10">
+              <div class="flex gap-2.5 text-[11px]">
+                <span class="font-bold text-indigo-300">${Math.round(pKcal)} kcal</span>
+                <span class="text-emerald-300 font-semibold">${pProt.toFixed(1)}g P</span>
+                <span class="text-amber-300">${pKh.toFixed(0)}g KH</span>
+                <span class="text-rose-300">${pF.toFixed(0)}g F</span>
+                <span class="text-cyan-300 font-semibold">${pFib.toFixed(1)}g B</span>
+              </div>
+              <div class="flex items-center gap-1.5">
+                <button onclick="openPresetEditorModal('${preset.id}')" class="px-2.5 py-1 rounded-lg bg-white/8 hover:bg-white/15 text-[11px] font-semibold text-slate-200">
+                  Bearbeiten
+                </button>
+                <button onclick="deletePreset('${preset.id}')" class="px-2 py-1 rounded-lg text-[11px] text-slate-500 hover:text-rose-400">
+                  ✕
+                </button>
+              </div>
+            </div>
+          </div>
+        `;
+      }).join('');
+
+      // 7-Day History Mini Chart
+      const last7 = [];
+      for (let i = -6; i <= 0; i++) {
+        const dISO = getTodayISO(i);
+        const t = calcDayTotals(dISO);
+        last7.push({
+          dateISO: dISO,
+          label: dISO.slice(8, 10) + '.' + dISO.slice(5, 7),
+          kcal: Math.round(t.kcal),
+          fib: Math.round(t.fib)
+        });
+      }
+      const maxKcal = Math.max(state.goals[state.phase].kcal, ...last7.map(x => x.kcal), 1);
+
+      return `
+        <div class="tab-view space-y-4">
+          <!-- Custom 1-Click Meals Manager -->
+          <section class="space-y-2.5">
+            <div class="flex items-center justify-between">
+              <div>
+                <h2 class="text-sm font-bold text-white">⚡ 1-Klick Mahlzeiten verwalten</h2>
+                <p class="text-[11px] text-slate-400">Manuell konfigurieren, anpassen & mit 1 Tippen loggen</p>
+              </div>
+              <button onclick="openPresetEditorModal()" class="px-3.5 py-2 rounded-2xl bg-indigo-500/30 border border-indigo-400/40 text-xs font-bold text-white">
+                + Neue Vorlage
+              </button>
+            </div>
+            <div class="space-y-2.5">
+              ${presetListHTML}
+            </div>
+          </section>
+
+          <!-- 7-Day Overview -->
+          <section class="glass-card rounded-[26px] p-4 space-y-3">
+            <div class="flex items-center justify-between">
+              <h2 class="text-sm font-bold text-white">7-Tage Verlauf</h2>
+              <span class="text-[11px] text-slate-400">Kalorien & Ballaststoffe</span>
+            </div>
+            <div class="grid grid-cols-7 gap-2 items-end h-28 pt-4">
+              ${last7.map(d => {
+                const hPct = Math.max(8, Math.round((d.kcal / maxKcal) * 100));
+                const isSel = d.dateISO === state.selectedDate;
+                return `
+                  <div onclick="state.selectedDate='${d.dateISO}'; switchTab('today');" class="flex flex-col items-center gap-1 cursor-pointer h-full justify-end">
+                    <span class="text-[9px] font-semibold text-slate-400">${d.kcal > 0 ? d.kcal : ''}</span>
+                    <div class="w-full rounded-t-xl transition-all ${isSel ? 'bg-gradient-to-t from-indigo-500 to-cyan-400' : 'bg-white/15 hover:bg-white/25'}" style="height: ${hPct}%"></div>
+                    <span class="text-[10px] ${isSel ? 'text-cyan-300 font-bold' : 'text-slate-400'}">${d.label}</span>
+                  </div>
+                `;
+              }).join('')}
+            </div>
+          </section>
+
+          <!-- Phase Goals & Data Backup -->
+          <section class="glass-card rounded-[26px] p-4 space-y-3">
+            <div class="flex items-center justify-between">
+              <h2 class="text-sm font-bold text-white">Ziele & Datensicherung</h2>
+              <button onclick="openGoalsModal()" class="text-xs font-semibold text-cyan-300">Ziele bearbeiten</button>
+            </div>
+            <div class="grid grid-cols-2 gap-2">
+              <button onclick="exportBackupJSON()" class="glass-pill py-2.5 px-3 rounded-2xl text-xs font-semibold text-slate-200 flex items-center justify-center gap-1.5">
+                📤 JSON Backup
+              </button>
+              <label class="glass-pill py-2.5 px-3 rounded-2xl text-xs font-semibold text-slate-200 flex items-center justify-center gap-1.5 cursor-pointer">
+                📥 Backup laden
+                <input type="file" accept=".json" onchange="importBackupJSON(event)" class="hidden" />
+              </label>
+            </div>
+          </section>
+        </div>
+      `;
+    }
+
+    // =========================================================================
+    // 11. MODALS: 1-CLICK MEAL EDITOR, QUICK LOG, NEW FOOD, GOALS
+    // =========================================================================
+    let editingPresetDraft = null;
+
+    function openModal(html) {
+      document.getElementById('modalSheet').innerHTML = html;
+      document.getElementById('modalBackdrop').classList.remove('hidden');
+    }
+
+    function closeModal() {
+      document.getElementById('modalBackdrop').classList.add('hidden');
+    }
+
+    function closeModalOnBackdrop(e) {
+      if (e.target.id === 'modalBackdrop') closeModal();
+    }
+
+    function openPresetEditorModal(presetId = null) {
+      if (presetId) {
+        const orig = state.presets.find(p => p.id === presetId);
+        editingPresetDraft = JSON.parse(JSON.stringify(orig));
+      } else {
+        editingPresetDraft = {
+          id: 'preset_' + Date.now(),
+          name: '',
+          icon: '🥪',
+          tag: 'Eigenes Meal',
+          items: [
+            { foodId: 'dinkelbrot', qty: 120 },
+            { foodId: 'proteinkaese', qty: 80 }
+          ]
+        };
+      }
+      renderPresetEditorContent();
+    }
+
+    function saveCurrentDayAsPreset() {
+      const day = getDayData();
+      if (day.entries.length === 0) return;
+      editingPresetDraft = {
+        id: 'preset_' + Date.now(),
+        name: 'Meine Jause ' + formatDateLabel(state.selectedDate),
+        icon: '⚡',
+        tag: 'Gespeichert',
+        items: day.entries.map(e => ({ foodId: e.foodId, qty: e.qty }))
+      };
+      renderPresetEditorContent();
+    }
+
+    function renderPresetEditorContent() {
+      const icons = ['🥪', '🥣', '🍗', '🥤', '🍳', '🥞', '🥗', '⚡'];
+      let totKcal = 0, totP = 0, totKh = 0, totF = 0, totFib = 0;
+      editingPresetDraft.items.forEach(it => {
+        const n = calcItemNutrition(getFoodById(it.foodId), it.qty);
+        totKcal += n.kcal; totP += n.p; totKh += n.kh; totF += n.f; totFib += n.fib;
+      });
+
+      const itemsHTML = editingPresetDraft.items.map((it, idx) => {
+        const food = getFoodById(it.foodId);
+        if (!food) return '';
+        return `
+          <div class="glass-subtle p-2.5 rounded-2xl flex items-center justify-between gap-2">
+            <span class="text-xs font-semibold text-white truncate flex-1">${food.name}</span>
+            <div class="flex items-center gap-1.5">
+              <input type="number" step="any" value="${it.qty}" onchange="editingPresetDraft.items[${idx}].qty = Math.max(0.5, parseFloat(this.value)||0); renderPresetEditorContent();" class="w-16 bg-black/40 border border-white/15 rounded-xl py-1 px-2 text-center text-xs font-bold text-white" />
+              <span class="text-[10px] text-slate-400 w-6">${food.unit}</span>
+              <button onclick="editingPresetDraft.items.splice(${idx}, 1); renderPresetEditorContent();" class="text-slate-400 hover:text-rose-400 px-1.5">✕</button>
+            </div>
+          </div>
+        `;
+      }).join('');
+
+      const foodOptions = state.foods.map(f => `<option value="${f.id}">${f.name} (${f.unit})</option>`).join('');
+
+      openModal(`
+        <div class="space-y-4">
+          <div class="flex items-center justify-between">
+            <h3 class="text-base font-bold text-white">1-Klick Mahlzeit konfigurieren</h3>
+            <button onclick="closeModal()" class="w-8 h-8 rounded-full bg-white/10 text-slate-300 flex items-center justify-center">✕</button>
+          </div>
+
+          <div class="space-y-2">
+            <label class="text-[11px] font-semibold text-slate-400">Name der Mahlzeit (z. B. Standard Jause)</label>
+            <input id="presetNameInput" type="text" value="${editingPresetDraft.name}" oninput="editingPresetDraft.name = this.value" placeholder="z. B. Standard Jause, Protein Kaiserschmarrn..." class="w-full bg-black/40 border border-white/15 rounded-2xl px-3.5 py-2.5 text-xs font-semibold text-white focus:outline-none focus:border-cyan-400" />
+          </div>
+
+          <div class="flex gap-1.5 overflow-x-auto no-scrollbar">
+            ${icons.map(ic => `
+              <button onclick="editingPresetDraft.icon='${ic}'; renderPresetEditorContent();" class="w-9 h-9 rounded-xl flex items-center justify-center text-lg ${editingPresetDraft.icon === ic ? 'bg-indigo-500/35 border border-indigo-400' : 'bg-white/5 border border-white/10'}">${ic}</button>
+            `).join('')}
+          </div>
+
+          <!-- Live Macro Preview -->
+          <div class="glass-card p-3 rounded-2xl flex justify-between text-xs">
+            <span class="font-bold text-indigo-300">${Math.round(totKcal)} kcal</span>
+            <span class="font-semibold text-emerald-300">${totP.toFixed(1)}g P</span>
+            <span class="text-amber-300">${totKh.toFixed(1)}g KH</span>
+            <span class="text-rose-300">${totF.toFixed(1)}g F</span>
+            <span class="font-semibold text-cyan-300">${totFib.toFixed(1)}g B</span>
+          </div>
+
+          <!-- Ingredients List -->
+          <div class="space-y-2 max-h-48 overflow-y-auto pr-1">
+            ${itemsHTML || '<div class="text-xs text-slate-400 text-center py-3">Füge unten Zutaten hinzu</div>'}
+          </div>
+
+          <!-- Add Ingredient Row -->
+          <div class="flex gap-2 pt-1">
+            <select id="presetAddFoodSelect" class="flex-1 bg-slate-900 border border-white/15 rounded-2xl px-3 py-2.5 text-xs text-white focus:outline-none">
+              ${foodOptions}
+            </select>
+            <button onclick="addIngredientToPresetDraft()" class="px-4 py-2.5 rounded-2xl bg-cyan-500/25 border border-cyan-400/35 text-xs font-bold text-cyan-200 shrink-0">
+              + Zutat
+            </button>
+          </div>
+
+          <button onclick="savePresetDraft()" class="w-full py-3 rounded-2xl bg-gradient-to-r from-indigo-500 to-cyan-500 text-xs font-extrabold text-slate-950 shadow-lg">
+            Als 1-Klick Mahlzeit speichern
+          </button>
+        </div>
+      `);
+    }
+
+    function addIngredientToPresetDraft() {
+      const sel = document.getElementById('presetAddFoodSelect');
+      const food = getFoodById(sel.value);
+      if (!food) return;
+      editingPresetDraft.items.push({ foodId: food.id, qty: food.defaultQty });
+      renderPresetEditorContent();
+    }
+
+    function savePresetDraft() {
+      const name = (editingPresetDraft.name || '').trim();
+      if (!name) {
+        showToast('Bitte gib der Mahlzeit einen Namen', '⚠️');
+        return;
+      }
+      if (editingPresetDraft.items.length === 0) {
+        showToast('Bitte mindestens eine Zutat wählen', '⚠️');
+        return;
+      }
+      const idx = state.presets.findIndex(p => p.id === editingPresetDraft.id);
+      if (idx >= 0) {
+        state.presets[idx] = editingPresetDraft;
+      } else {
+        state.presets.unshift(editingPresetDraft);
+      }
+      saveState();
+      closeModal();
+      render();
+      showToast(`"${name}" gespeichert!`, '⚡');
+    }
+
+    function deletePreset(presetId) {
+      state.presets = state.presets.filter(p => p.id !== presetId);
+      saveState();
+      render();
+      showToast('Vorlage gelöscht', '🗑️');
+    }
+
+    function openQuickLogModal() {
+      const options = state.foods.map(f => `<option value="${f.id}">${f.name} (${f.kcal} kcal / ${f.isUnit ? '1 ' + f.unit : '100' + f.unit})</option>`).join('');
+      openModal(`
+        <div class="space-y-4">
+          <div class="flex items-center justify-between">
+            <h3 class="text-base font-bold text-white">Schnell loggen</h3>
+            <button onclick="closeModal()" class="w-8 h-8 rounded-full bg-white/10 text-slate-300 flex items-center justify-center">✕</button>
+          </div>
+          <div class="space-y-3">
+            <div>
+              <label class="text-[11px] text-slate-400 font-semibold">Lebensmittel wählen</label>
+              <select id="quickFoodSel" onchange="const f = getFoodById(this.value); document.getElementById('quickFoodQty').value = f.defaultQty; document.getElementById('quickFoodUnit').textContent = f.unit;" class="w-full mt-1 bg-slate-900 border border-white/15 rounded-2xl px-3.5 py-3 text-xs text-white">
+                ${options}
+              </select>
+            </div>
+            <div>
+              <label class="text-[11px] text-slate-400 font-semibold">Menge</label>
+              <div class="flex items-center gap-2 mt-1">
+                <input id="quickFoodQty" type="number" step="any" value="${state.foods[0].defaultQty}" class="flex-1 bg-black/40 border border-white/15 rounded-2xl px-3.5 py-2.5 text-sm font-bold text-white" />
+                <span id="quickFoodUnit" class="text-xs font-semibold text-slate-300 px-2">${state.foods[0].unit}</span>
+              </div>
+            </div>
+            <button onclick="addFoodEntry(document.getElementById('quickFoodSel').value, document.getElementById('quickFoodQty').value); closeModal();" class="w-full py-3 rounded-2xl bg-gradient-to-r from-cyan-400 to-indigo-400 text-xs font-extrabold text-slate-950">
+              Hinzufügen
+            </button>
+          </div>
+        </div>
+      `);
+    }
+
+    function openNewFoodModal() {
+      openModal(`
+        <div class="space-y-3.5">
+          <div class="flex items-center justify-between">
+            <h3 class="text-base font-bold text-white">Neues Lebensmittel (pro 100 g/ml)</h3>
+            <button onclick="closeModal()" class="w-8 h-8 rounded-full bg-white/10 text-slate-300 flex items-center justify-center">✕</button>
+          </div>
+          <input id="nfName" type="text" placeholder="Name (z. B. Topfen 20 %)" class="w-full bg-black/40 border border-white/15 rounded-2xl px-3.5 py-2.5 text-xs text-white" />
+          <div class="grid grid-cols-2 gap-2">
+            <div>
+              <label class="text-[10px] text-slate-400">Kalorien (kcal)</label>
+              <input id="nfKcal" type="number" placeholder="0" class="w-full mt-0.5 bg-black/40 border border-white/15 rounded-xl px-3 py-2 text-xs text-white" />
+            </div>
+            <div>
+              <label class="text-[10px] text-emerald-300">Protein (g)</label>
+              <input id="nfP" type="number" step="0.1" placeholder="0" class="w-full mt-0.5 bg-black/40 border border-white/15 rounded-xl px-3 py-2 text-xs text-white" />
+            </div>
+            <div>
+              <label class="text-[10px] text-amber-300">Kohlenhydrate (g)</label>
+              <input id="nfKh" type="number" step="0.1" placeholder="0" class="w-full mt-0.5 bg-black/40 border border-white/15 rounded-xl px-3 py-2 text-xs text-white" />
+            </div>
+            <div>
+              <label class="text-[10px] text-rose-300">Fett (g)</label>
+              <input id="nfF" type="number" step="0.1" placeholder="0" class="w-full mt-0.5 bg-black/40 border border-white/15 rounded-xl px-3 py-2 text-xs text-white" />
+            </div>
+            <div>
+              <label class="text-[10px] text-cyan-300 font-bold">Ballaststoffe (g)</label>
+              <input id="nfFib" type="number" step="0.1" placeholder="0" class="w-full mt-0.5 bg-black/40 border border-cyan-400/30 rounded-xl px-3 py-2 text-xs text-white" />
+            </div>
+            <div>
+              <label class="text-[10px] text-slate-400">Standard-Portion (g)</label>
+              <input id="nfDef" type="number" value="100" class="w-full mt-0.5 bg-black/40 border border-white/15 rounded-xl px-3 py-2 text-xs text-white" />
+            </div>
+          </div>
+          <button onclick="saveNewCustomFood()" class="w-full py-3 rounded-2xl bg-emerald-400 text-xs font-extrabold text-slate-950">
+            Speichern
+          </button>
+        </div>
+      `);
+    }
+
+    function saveNewCustomFood() {
+      const name = (document.getElementById('nfName').value || '').trim();
+      if (!name) return showToast('Name erforderlich', '⚠️');
+      const newFood = {
+        id: 'custom_' + Date.now(),
+        name,
+        cat: 'Gescannt & Eigene',
+        unit: 'g',
+        defaultQty: Number(document.getElementById('nfDef').value) || 100,
+        kcal: Number(document.getElementById('nfKcal').value) || 0,
+        p: Number(document.getElementById('nfP').value) || 0,
+        kh: Number(document.getElementById('nfKh').value) || 0,
+        f: Number(document.getElementById('nfF').value) || 0,
+        fib: Number(document.getElementById('nfFib').value) || 0,
+        micro: { mg: 0, fe: 0, zn: 0, ca: 0, b12: 0 }
+      };
+      state.foods.unshift(newFood);
+      saveState();
+      closeModal();
+      render();
+      showToast(`${name} angelegt!`, '✅');
+    }
+
+    function openGoalsModal() {
+      const g = state.goals[state.phase];
+      openModal(`
+        <div class="space-y-3.5">
+          <div class="flex items-center justify-between">
+            <h3 class="text-base font-bold text-white">Ziele (${state.phase === 'bulk' ? 'Bulk' : 'Cut'}) anpassen</h3>
+            <button onclick="closeModal()" class="w-8 h-8 rounded-full bg-white/10 text-slate-300 flex items-center justify-center">✕</button>
+          </div>
+          <div class="grid grid-cols-2 gap-2.5">
+            <div><label class="text-[10px] text-slate-400">Kalorien (kcal)</label><input id="gKcal" type="number" value="${g.kcal}" class="w-full mt-0.5 bg-black/40 border border-white/15 rounded-xl px-3 py-2 text-xs text-white" /></div>
+            <div><label class="text-[10px] text-emerald-300">Protein (g)</label><input id="gP" type="number" value="${g.p}" class="w-full mt-0.5 bg-black/40 border border-white/15 rounded-xl px-3 py-2 text-xs text-white" /></div>
+            <div><label class="text-[10px] text-amber-300">Kohlenhydrate (g)</label><input id="gKh" type="number" value="${g.kh}" class="w-full mt-0.5 bg-black/40 border border-white/15 rounded-xl px-3 py-2 text-xs text-white" /></div>
+            <div><label class="text-[10px] text-rose-300">Fett (g)</label><input id="gF" type="number" value="${g.f}" class="w-full mt-0.5 bg-black/40 border border-white/15 rounded-xl px-3 py-2 text-xs text-white" /></div>
+            <div><label class="text-[10px] text-cyan-300 font-bold">Ballaststoffe (g)</label><input id="gFib" type="number" value="${g.fib}" class="w-full mt-0.5 bg-black/40 border border-cyan-400/30 rounded-xl px-3 py-2 text-xs text-white" /></div>
+            <div><label class="text-[10px] text-sky-300">Wasser (ml)</label><input id="gWater" type="number" value="${g.water}" class="w-full mt-0.5 bg-black/40 border border-white/15 rounded-xl px-3 py-2 text-xs text-white" /></div>
+          </div>
+          <button onclick="savePhaseGoals()" class="w-full py-3 rounded-2xl bg-indigo-500 text-xs font-extrabold text-white">Ziele speichern</button>
+        </div>
+      `);
+    }
+
+    function savePhaseGoals() {
+      state.goals[state.phase] = {
+        kcal: Number(document.getElementById('gKcal').value) || 3300,
+        p: Number(document.getElementById('gP').value) || 200,
+        kh: Number(document.getElementById('gKh').value) || 400,
+        f: Number(document.getElementById('gF').value) || 90,
+        fib: Number(document.getElementById('gFib').value) || 35,
+        water: Number(document.getElementById('gWater').value) || 3500
+      };
+      saveState();
+      closeModal();
+      render();
+      showToast('Tagesziele aktualisiert', '🎯');
+    }
+
+    // =========================================================================
+    // 12. JSON BACKUP EXPORT / IMPORT & SERVICE WORKER REGISTRATION
+    // =========================================================================
+    function exportBackupJSON() {
+      const blob = new Blob([JSON.stringify(state, null, 2)], { type: 'application/json' });
+      const url = URL.createObjectURL(blob);
+      const a = document.createElement('a');
+      a.href = url;
+      a.download = `nutriglass-backup-${getTodayISO(0)}.json`;
+      a.click();
+      URL.revokeObjectURL(url);
+      showToast('Backup exportiert', '📤');
+    }
+
+    function importBackupJSON(event) {
+      const file = event.target.files?.[0];
+      if (!file) return;
+      const reader = new FileReader();
+      reader.onload = (e) => {
+        try {
+          const imported = JSON.parse(e.target.result);
+          if (imported && imported.foods && imported.days) {
+            state = imported;
+            saveState();
+            render();
+            showToast('Backup wiederhergestellt!', '📥');
+          } else {
+            showToast('Ungültige Backup-Datei', '⚠️');
+          }
+        } catch {
+          showToast('Fehler beim Lesen der Datei', '⚠️');
+        }
+      };
+      reader.readAsText(file);
+    }
+
+    // Main Render Dispatcher
+    function render() {
+      updateHeaderAndNav();
+      const viewport = document.getElementById('appViewport');
+      if (state.activeTab === 'today') {
+        viewport.innerHTML = renderTodayView();
+      } else if (state.activeTab === 'scan') {
+        viewport.innerHTML = renderScanView();
+      } else if (state.activeTab === 'supps') {
+        viewport.innerHTML = renderSuppsView();
+      } else if (state.activeTab === 'presets') {
+        viewport.innerHTML = renderPresetsAndMoreView();
+      }
+    }
+
+    // Register Service Worker for GitHub Pages PWA
+    if ('serviceWorker' in navigator) {
+      window.addEventListener('load', () => {
+        navigator.serviceWorker.register('./sw.js').catch(() => {});
+      });
+    }
+
+    // Boot
+    render();
+  </script>
+</body>
+</html>
